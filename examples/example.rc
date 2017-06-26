@@ -1,3 +1,2 @@
 
-GLFW_ICON               ICON            "glfw.ico"
-
+EXAMPLE_ICON               ICON            "example.ico"
