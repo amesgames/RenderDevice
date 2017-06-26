@@ -6,10 +6,17 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
+if (WIN32)
+    set(ICON example.rc)
+elseif (APPLE)
+    set(ICON example.icns)
+    set_source_files_properties(example.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+endif()
+
 set(GLAD "${GLFW_SOURCE_DIR}/deps/glad/glad.h"
          "${GLFW_SOURCE_DIR}/deps/glad.c")
 
-add_executable(triangle WIN32 MACOSX_BUNDLE triangle.cpp ${GLAD})
+add_executable(triangle WIN32 MACOSX_BUNDLE triangle.cpp ${ICON} ${GLAD})
 
 set(WINDOWS_BINARIES triangle)
 
@@ -25,10 +32,10 @@ endif()
 if (APPLE)
     set_target_properties(triangle PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "Triangle")
 
-    #set_target_properties(${WINDOWS_BINARIES} PROPERTIES
-    #                      RESOURCE glfw.icns
-    #                      MACOSX_BUNDLE_SHORT_VERSION_STRING ${GLFW_VERSION}
-    #                      MACOSX_BUNDLE_LONG_VERSION_STRING ${GLFW_VERSION_FULL}
-    #                      MACOSX_BUNDLE_ICON_FILE glfw.icns
-    #                      MACOSX_BUNDLE_INFO_PLIST "${GLFW_SOURCE_DIR}/CMake/MacOSXBundleInfo.plist.in")
+    set_target_properties(${WINDOWS_BINARIES} PROPERTIES
+                          RESOURCE example.icns
+                          MACOSX_BUNDLE_SHORT_VERSION_STRING 1.0
+                          MACOSX_BUNDLE_LONG_VERSION_STRING 1.0.0.0
+                          MACOSX_BUNDLE_ICON_FILE example.icns
+                          MACOSX_BUNDLE_INFO_PLIST "${RenderDeviceLib_SOURCE_DIR}/CMake/MacOSXBundleInfo.plist.in")
 endif()
