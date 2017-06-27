@@ -114,7 +114,7 @@ enum VertexElementType
 // Describes a vertex element within a vertex buffer
 struct VertexElement
 {
-	unsigned int index; // index binding for vertex element
+	unsigned int index; // location binding for vertex element
 	VertexElementType type; // type of vertex element
 	int size; // number of components
 	int stride; // number of bytes between each successive element (leave zero for this to be assumed to be size times size of type)
