@@ -103,15 +103,94 @@ class OpenGLVertexBuffer : public VertexBuffer
 {
 public:
 
-	OpenGLVertexBuffer() {}
+	OpenGLVertexBuffer(long long size, void *data)
+	{
+		glGenBuffers(1, &VBO);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW); // always assuming static, for now
+	}
+
+	~OpenGLVertexBuffer() override
+	{
+		glDeleteBuffers(1, &VBO);
+	}
+
+	unsigned int VBO = 0;
 };
 
 class OpenGLVertexDescription : public VertexDescription
 {
+public:
+
+	struct OpenGLVertexElement
+	{
+		GLuint index;
+		GLint size;
+		GLenum type;
+		GLboolean normalized;
+		GLsizei stride;
+		const GLvoid *pointer;
+	};
+
+	OpenGLVertexDescription(unsigned int _numVertexElements, const VertexElement *vertexElements) : numVertexElements(_numVertexElements)
+	{
+		static GLenum toOpenGLType[] = { GL_BYTE, GL_SHORT, GL_INT, GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_UNSIGNED_INT,
+			GL_BYTE, GL_SHORT, GL_INT, GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_UNSIGNED_INT, GL_HALF_FLOAT, GL_FLOAT, GL_DOUBLE };
+		static GLboolean toOpenGLNormalized[] = { GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE,
+			GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE };
+
+		openGLVertexElements = new OpenGLVertexElement[numVertexElements];
+		for(unsigned int i = 0; i < numVertexElements; i++)
+		{
+			openGLVertexElements[i].index = vertexElements[i].index;
+			openGLVertexElements[i].size = vertexElements[i].size;
+			openGLVertexElements[i].type = toOpenGLType[vertexElements[i].type];
+			openGLVertexElements[i].normalized = toOpenGLNormalized[vertexElements[i].type];
+			openGLVertexElements[i].stride = vertexElements[i].stride;
+			openGLVertexElements[i].pointer = (char *)nullptr + vertexElements[i].offset;
+		}
+	}
+
+	~OpenGLVertexDescription() override
+	{
+		delete[] openGLVertexElements;
+	}
+
+	unsigned int numVertexElements = 0;
+	OpenGLVertexElement *openGLVertexElements = nullptr;
 };
 
 class OpenGLVertexArray : public VertexArray
 {
+public:
+
+	OpenGLVertexArray(unsigned int numVertexBuffers, VertexBuffer **vertexBuffers, VertexDescription **vertexDescriptions)
+	{
+		glGenVertexArrays(1, &VAO);
+		glBindVertexArray(VAO);
+
+		for(unsigned int i = 0; i < numVertexBuffers; i++)
+		{
+			OpenGLVertexBuffer *vertexBuffer = reinterpret_cast<OpenGLVertexBuffer *>(vertexBuffers[i]);
+			OpenGLVertexDescription *vertexDescription = reinterpret_cast<OpenGLVertexDescription *>(vertexDescriptions[i]);
+
+			glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer->VBO);
+
+			for(unsigned int j = 0; j < vertexDescription->numVertexElements; j++)
+			{
+				glEnableVertexAttribArray(vertexDescription->openGLVertexElements[j].index);
+				glVertexAttribPointer(vertexDescription->openGLVertexElements[j].index, vertexDescription->openGLVertexElements[j].size, vertexDescription->openGLVertexElements[j].type,
+					vertexDescription->openGLVertexElements[j].normalized, vertexDescription->openGLVertexElements[j].stride, vertexDescription->openGLVertexElements[j].pointer);
+			}
+		}
+	}
+
+	~OpenGLVertexArray() override
+	{
+		glDeleteVertexArrays(1, &VAO);
+	}
+
+	unsigned int VAO = 0;
 };
 
 VertexShader *OpenGLRenderDevice::CreateVertexShader(const char *code)
@@ -151,42 +230,48 @@ void OpenGLRenderDevice::SetPipeline(Pipeline *pipeline)
 
 VertexBuffer *OpenGLRenderDevice::CreateVertexBuffer(long long size, void *data)
 {
-	return nullptr;
+	return new OpenGLVertexBuffer(size, data);
 }
 
 void OpenGLRenderDevice::DestroyVertexBuffer(VertexBuffer *vertexBuffer)
 {
+	delete vertexBuffer;
 }
 
 VertexDescription *OpenGLRenderDevice::CreateVertexDescription(unsigned int numVertexElements, const VertexElement *vertexElements)
 {
-	return nullptr;
+	return new OpenGLVertexDescription(numVertexElements, vertexElements);
 }
 
 void OpenGLRenderDevice::DestroyVertexDescription(VertexDescription *vertexDescription)
 {
+	delete vertexDescription;
 }
 
 VertexArray *OpenGLRenderDevice::CreateVertexArray(unsigned int numVertexBuffers, VertexBuffer **vertexBuffers, VertexDescription **vertexDescriptions)
 {
-	return nullptr;
+	return new OpenGLVertexArray(numVertexBuffers, vertexBuffers, vertexDescriptions);
 }
 
 void OpenGLRenderDevice::DestroyVertexArray(VertexArray *vertexArray)
 {
+	delete vertexArray;
 }
 
 void OpenGLRenderDevice::SetVertexArray(VertexArray *vertexArray)
 {
+	glBindVertexArray(reinterpret_cast<OpenGLVertexArray *>(vertexArray)->VAO);
 }
 
 void OpenGLRenderDevice::ClearColor(float red, float green, float blue, float alpha)
 {
 	glClearColor(red, green, blue, alpha);
+	glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void OpenGLRenderDevice::DrawTriangles(int offset, int count)
 {
+	glDrawArrays(GL_TRIANGLES, offset, count);
 }
 
 } // end namespace render

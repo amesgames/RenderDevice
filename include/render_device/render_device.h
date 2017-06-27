@@ -90,7 +90,7 @@ protected:
 // Describes a vertex element's type
 enum VertexElementType
 {
-	VERTEXELEMENTTYPE_BYTE,
+	VERTEXELEMENTTYPE_BYTE = 0,
 	VERTEXELEMENTTYPE_SHORT,
 	VERTEXELEMENTTYPE_INT,
 
@@ -118,6 +118,7 @@ struct VertexElement
 	VertexElementType type; // type of vertex element
 	int size; // number of components
 	int stride; // number of bytes between each successive element (leave zero for this to be assumed to be size times size of type)
+	long long offset; // offset where first occurrence of this vertex element resides in the buffer
 };
 
 // Encapsulates the render device API.
