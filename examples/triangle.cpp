@@ -1,5 +1,7 @@
 #include "render_device/platform.h"
 
+#include "render_device/render_device.h"
+
 #include <glad/glad.h>
 
 #include <iostream>
@@ -14,7 +16,7 @@ const char *vertexShaderSource = "#version 410 core\n"
     "{\n"
     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
     "}\0";
-const char *fragmentShaderSource = "#version 410 core\n"
+const char *pixelShaderSource = "#version 410 core\n"
     "out vec4 FragColor;\n"
     "void main()\n"
     "{\n"
@@ -27,53 +29,28 @@ int main()
 
     // window creation
     // --------------------
-    platform::PLATFORM_WINDOW_REF window = platform::CreatePlatformWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL");
+    platform::PLATFORM_WINDOW_REF window = platform::CreatePlatformWindow(SCR_WIDTH, SCR_HEIGHT, "Triangle");
     if(!window)
     {
         platform::TerminatePlatform();
         return -1;
     }
 
+	render::RenderDevice *renderDevice = render::CreateRenderDevice();
+
 	// build and compile our shader program
     // ------------------------------------
     // vertex shader
-    int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    // check for shader compile errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if(!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
+    render::VertexShader *vertexShader = renderDevice->CreateVertexShader(vertexShaderSource);
+
     // fragment shader
-    int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    // check for shader compile errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if(!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
+    render::PixelShader *pixelShader = renderDevice->CreatePixelShader(pixelShaderSource);
+
     // link shaders
-    int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    // check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if(!success)
-	{
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    render::Pipeline *pipeline = renderDevice->CreatePipeline(vertexShader, pixelShader);
+
+    renderDevice->DestroyVertexShader(vertexShader);
+	renderDevice->DestroyPixelShader(pixelShader);
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -112,7 +89,8 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // draw our first triangle
-        glUseProgram(shaderProgram);
+		renderDevice->SetPipeline(pipeline);
+
         glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
         glDrawArrays(GL_TRIANGLES, 0, 3);
         // glBindVertexArray(0); // no need to unbind it every time 

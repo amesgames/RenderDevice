@@ -3,8 +3,184 @@
 namespace render
 {
 
+// Encapsulates a vertex shader
+class VertexShader
+{
+public:
+
+	// virtual destructor to ensure subclasses have a virtual destructor
+	virtual ~VertexShader() {}
+
+protected:
+
+	// protected default constructor to ensure these are never created directly
+	VertexShader() {}
+};
+
+// Encapsulates a pixel shader
+class PixelShader
+{
+public:
+
+	// virtual destructor to ensure subclasses have a virtual destructor
+	virtual ~PixelShader() {}
+
+protected:
+
+	// protected default constructor to ensure these are never created directly
+	PixelShader() {}
+};
+
+// Encapsulates a shader pipeline
+class Pipeline
+{
+public:
+
+	// virtual destructor to ensure subclasses have a virtual destructor
+	virtual ~Pipeline() {}
+
+protected:
+
+	// protected default constructor to ensure these are never created directly
+	Pipeline() {}
+};
+
+// Encapsulates a vertex buffer
+class VertexBuffer
+{
+public:
+
+	// virtual destructor to ensure subclasses have a virtual destructor
+	virtual ~VertexBuffer() {}
+
+protected:
+
+	// protected default constructor to ensure these are never created directly
+	VertexBuffer() {}
+};
+
+// Encapsulates a vertex buffer semantic description
+class VertexDescription
+{
+public:
+
+	// virtual destructor to ensure subclasses have a virtual destructor
+	virtual ~VertexDescription() {}
+
+protected:
+
+	// protected default constructor to ensure these are never created directly
+	VertexDescription() {}
+};
+
+// Encapsulates a collection of vertex buffers and their semantic descriptions
+class VertexArray
+{
+public:
+
+	// virtual destructor to ensure subclasses have a virtual destructor
+	virtual ~VertexArray() {}
+
+protected:
+
+	// protected default constructor to ensure these are never created directly
+	VertexArray() {}
+};
+
+// Describes a vertex element's type
+enum VertexElementType
+{
+	VERTEXELEMENTTYPE_BYTE,
+	VERTEXELEMENTTYPE_SHORT,
+	VERTEXELEMENTTYPE_INT,
+
+	VERTEXELEMENTTYPE_UNSIGNED_BYTE,	
+	VERTEXELEMENTTYPE_UNSIGNED_SHORT,
+	VERTEXELEMENTTYPE_UNSIGNED_INT,
+
+	VERTEXELEMENTTYPE_BYTE_NORMALIZE,
+	VERTEXELEMENTTYPE_SHORT_NORMALIZE,
+	VERTEXELEMENTTYPE_INT_NORMALIZE,
+
+	VERTEXELEMENTTYPE_UNSIGNED_BYTE_NORMALIZE,	
+	VERTEXELEMENTTYPE_UNSIGNED_SHORT_NORMALIZE,
+	VERTEXELEMENTTYPE_UNSIGNED_INT_NORMALIZE,
+
+	VERTEXELEMENTTYPE_HALF_FLOAT,
+	VERTEXELEMENTTYPE_FLOAT,
+	VERTEXELEMENTTYPE_DOUBLE
+};
+
+// Describes a vertex element within a vertex buffer
+struct VertexElement
+{
+	unsigned int index; // index binding for vertex element
+	VertexElementType type; // type of vertex element
+	int size; // number of components
+	int stride; // number of bytes between each successive element (leave zero for this to be assumed to be size times size of type)
+};
+
+// Encapsulates the render device API.
 class RenderDevice
 {
+public:
+
+	// virtual destructor to ensure subclasses have a virtual destructor
+	virtual ~RenderDevice() {}
+
+	// Create a vertex shader from the supplied code; code is assumed to be GLSL for now.
+	virtual VertexShader *CreateVertexShader(const char *code) = 0;
+
+	// Destroy a vertex shader
+	virtual void DestroyVertexShader(VertexShader *vertexShader) = 0;
+
+	// Create a pixel shader from the supplied code; code is assumed to be GLSL for now.
+	virtual PixelShader *CreatePixelShader(const char *code) = 0;
+
+	// Destroy a pixel shader
+	virtual void DestroyPixelShader(PixelShader *pixelShader) = 0;
+
+	// Create a linked shader pipeline given a vertex and pixel shader
+	virtual Pipeline *CreatePipeline(VertexShader *vertexShader, PixelShader *pixelShader) = 0;
+
+	// Destroy a shader pipeline
+	virtual void DestroyPipeline(Pipeline *pipeline) = 0;
+
+	// Set a shader pipeline as active for subsequent draw commands
+	virtual void SetPipeline(Pipeline *pipeline) = 0;
+
+	// Create a vertex buffer
+	virtual VertexBuffer *CreateVertexBuffer(long long size, void *data = nullptr) = 0;
+
+	// Destroy a vertex buffer
+	virtual void DestroyVertexBuffer(VertexBuffer *vertexBuffer) = 0;
+
+	// Create a vertex description given an array of VertexElement structures
+	virtual VertexDescription *CreateVertexDescription(unsigned int numVertexElements, const VertexElement *vertexElements) = 0;
+
+	// Destroy a vertex description
+	virtual void DestroyVertexDescription(VertexDescription *vertexDescription) = 0;
+
+	// Create a vertex array given an array of vertex buffers and associated vertex descriptions; the arrays must be the same size.
+	virtual VertexArray *CreateVertexArray(unsigned int numVertexBuffers, VertexBuffer **vertexBuffers, VertexDescription **vertexDescriptions) = 0;
+
+	// Destroy a vertex array
+	virtual void DestroyVertexArray(VertexArray *vertexArray) = 0;
+
+	// Set a vertex array as active for subsequent draw commands
+	virtual void SetVertexArray(VertexArray *vertexArray) = 0;
+
+	// Clear the default render target's color buffer to the specified RGBA values
+	virtual void ClearColor(float red, float green, float blue, float alpha) = 0;
+
+	// Draw a collection of triangles using the currently active shader pipeline and vertex array data
+	virtual void DrawTriangles(int offset, int count) = 0;
 };
+
+// Creates a RenderDevice
+RenderDevice *CreateRenderDevice();
+
+// Destroys a RenderDevice
+void DestroyRenderDevice(RenderDevice *renderDevice);
 
 } // end namespace render
