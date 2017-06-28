@@ -31,6 +31,32 @@ protected:
 	PixelShader() {}
 };
 
+// Encapsulates a shader pipeline uniform parameter
+class PipelineParam
+{
+public:
+
+	// virtual destructor to ensure subclasses have a virtual destructor
+	virtual ~PipelineParam() {}
+
+	virtual void SetAsInt(int value) = 0;
+
+	virtual void SetAsFloat(float value) = 0;
+
+	virtual void SetAsMat4(const float *value) = 0;
+
+	virtual void SetAsIntArray(int count, const int *values) = 0;
+
+	virtual void SetAsFloatArray(int count, const float *values) = 0;
+
+	virtual void SetAsMat4Array(int count, const float *values) = 0;
+
+protected:
+
+	// protected default constructor to ensure these are never created directly
+	PipelineParam() {}
+};
+
 // Encapsulates a shader pipeline
 class Pipeline
 {
@@ -38,6 +64,8 @@ public:
 
 	// virtual destructor to ensure subclasses have a virtual destructor
 	virtual ~Pipeline() {}
+
+	virtual PipelineParam *GetParam(const char *name) = 0;
 
 protected:
 
@@ -87,7 +115,7 @@ protected:
 	VertexArray() {}
 };
     
-// Encapsulates a an index buffer and their semantic descriptions
+// Encapsulates an index buffer
 class IndexBuffer
 {
 public:
@@ -99,6 +127,20 @@ protected:
         
     // protected default constructor to ensure these are never created directly
     IndexBuffer() {}
+};
+
+// Encapsulates a 2D texture
+class Texture2D
+{
+public:
+
+    // virtual destructor to ensure subclasses have a virtual destructor
+    virtual ~Texture2D() {}
+        
+protected:
+        
+    // protected default constructor to ensure these are never created directly
+    Texture2D() {}
 };
 
 // Describes a vertex element's type
@@ -165,7 +207,7 @@ public:
 	virtual void SetPipeline(Pipeline *pipeline) = 0;
 
 	// Create a vertex buffer
-	virtual VertexBuffer *CreateVertexBuffer(long long size, void *data = nullptr) = 0;
+	virtual VertexBuffer *CreateVertexBuffer(long long size, const void *data = nullptr) = 0;
 
 	// Destroy a vertex buffer
 	virtual void DestroyVertexBuffer(VertexBuffer *vertexBuffer) = 0;
@@ -186,7 +228,7 @@ public:
 	virtual void SetVertexArray(VertexArray *vertexArray) = 0;
 
     // Create an index buffer
-    virtual IndexBuffer *CreateIndexBuffer(long long size, void *data = nullptr) = 0;
+    virtual IndexBuffer *CreateIndexBuffer(long long size, const void *data = nullptr) = 0;
 
     // Destroy an index buffer
     virtual void DestroyIndexBuffer(IndexBuffer *indexBuffer) = 0;
@@ -194,15 +236,24 @@ public:
     // Set an index buffer as active for subsequent draw commands
     virtual void SetIndexBuffer(IndexBuffer *indexBuffer) = 0;
 
+	// Create a 2D texture
+    virtual Texture2D *CreateTexture2D(int width, int height, const void *data = nullptr) = 0;
+
+    // Destroy a 2D texture
+    virtual void DestroyTexture2D(Texture2D *texture2D) = 0;
+    
+    // Set a 2D texture as active on a slot for subsequent draw commands
+    virtual void SetTexture2D(unsigned int slot, Texture2D *texture2D) = 0;
+
     // Clear the default render target's color buffer to the specified RGBA values
-	virtual void ClearColor(float red, float green, float blue, float alpha) = 0;
+	virtual void Clear(float red, float green, float blue, float alpha, float depth) = 0;
 
 	// Draw a collection of triangles using the currently active shader pipeline and vertex array data
 	virtual void DrawTriangles(int offset, int count) = 0;
 
     // Draw a collection of triangles using the currently active shader pipeline, vertex array data,
     // and index buffer
-    virtual void DrawTrianglesIndexed32(int offset, int count) = 0;
+    virtual void DrawTrianglesIndexed32(long long offset, int count) = 0;
 };
 
 // Creates a RenderDevice
