@@ -17,6 +17,7 @@ set(GLAD "${GLFW_SOURCE_DIR}/deps/glad/glad.h"
          "${GLFW_SOURCE_DIR}/deps/glad.c")
 
 add_executable(triangle WIN32 MACOSX_BUNDLE triangle.cpp ${ICON} ${GLAD})
+add_executable(textured_cube WIN32 MACOSX_BUNDLE textured_cube.cpp ${ICON} ${GLAD})
 
 set(WINDOWS_BINARIES triangle)
 
@@ -31,6 +32,7 @@ endif()
 
 if (APPLE)
     set_target_properties(triangle PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "Triangle")
+		set_target_properties(textured_cube PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "TexturedCube")
 
     set_target_properties(${WINDOWS_BINARIES} PROPERTIES
                           RESOURCE example.icns

@@ -86,6 +86,20 @@ protected:
 	// protected default constructor to ensure these are never created directly
 	VertexArray() {}
 };
+    
+// Encapsulates a an index buffer and their semantic descriptions
+class IndexBuffer
+{
+public:
+
+    // virtual destructor to ensure subclasses have a virtual destructor
+    virtual ~IndexBuffer() {}
+        
+protected:
+        
+    // protected default constructor to ensure these are never created directly
+    IndexBuffer() {}
+};
 
 // Describes a vertex element's type
 enum VertexElementType
@@ -171,11 +185,24 @@ public:
 	// Set a vertex array as active for subsequent draw commands
 	virtual void SetVertexArray(VertexArray *vertexArray) = 0;
 
-	// Clear the default render target's color buffer to the specified RGBA values
+    // Create an index buffer
+    virtual IndexBuffer *CreateIndexBuffer(long long size, void *data = nullptr) = 0;
+
+    // Destroy an index buffer
+    virtual void DestroyIndexBuffer(IndexBuffer *indexBuffer) = 0;
+    
+    // Set an index buffer as active for subsequent draw commands
+    virtual void SetIndexBuffer(IndexBuffer *indexBuffer) = 0;
+
+    // Clear the default render target's color buffer to the specified RGBA values
 	virtual void ClearColor(float red, float green, float blue, float alpha) = 0;
 
 	// Draw a collection of triangles using the currently active shader pipeline and vertex array data
 	virtual void DrawTriangles(int offset, int count) = 0;
+
+    // Draw a collection of triangles using the currently active shader pipeline, vertex array data,
+    // and index buffer
+    virtual void DrawTrianglesIndexed32(int offset, int count) = 0;
 };
 
 // Creates a RenderDevice
