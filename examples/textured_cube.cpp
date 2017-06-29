@@ -74,15 +74,7 @@ int main()
 	if(param)
 		param->SetAsInt(0);
 
-	param = pipeline->GetParam("uModel");
-	if(param)
-	{
-		glm::mat4 rotateX = glm::rotate(glm::mat4(1), glm::radians(45.0f), glm::vec3(1, 0, 0));
-		glm::mat4 rotateY = glm::rotate(glm::mat4(1), glm::radians(45.0f), glm::vec3(0, 1, 0));
-		glm::mat4 rotateZ = glm::rotate(glm::mat4(1), glm::radians(45.0f), glm::vec3(0, 0, 1));
-		glm::mat4 model = rotateZ * rotateY * rotateX;
-		param->SetAsMat4(glm::value_ptr(model));
-	}
+	render::PipelineParam *uModelParam = pipeline->GetParam("uModel");
 
 	param = pipeline->GetParam("uView");
 	if(param)
@@ -179,6 +171,15 @@ int main()
 	// -----------
 	while(platform::PollPlatformWindow(window))
 	{
+		if(uModelParam)
+		{
+			glm::mat4 model;
+
+			platform::GetPlatformWindowTrackball(model);
+
+			uModelParam->SetAsMat4(glm::value_ptr(model));
+		}
+
 		// render
 		// ------
 		renderDevice->Clear(0.2f, 0.3f, 0.3f, 1.0f, 1.0f);
