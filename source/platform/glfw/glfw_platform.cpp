@@ -3,8 +3,11 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_access.hpp>
+#include <glm/gtx/norm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 #include <iostream>
@@ -145,46 +148,43 @@ static void cursor_position_callback(GLFWwindow *window, double xpos, double ypo
 		// Map the point to the sphere
 		MapToSphere(s_MousePt, s_EndVec);
 
-		glm::quat quat;
-
 		// Compute the vector perpendicular to the begin and end vectors
 		glm::vec3 perp = glm::cross(s_BegVec, s_EndVec);
 
-		// Compute the length of the perpendicular vector
-		if(glm::length(perp) > 1.0e-5) // if its non-zero
+		glm::quat quat;
+		if(glm::length(perp) > 1.0e-5) // if the length of the perpendicular vector non-zero
 		{
-			// We're ok, so return the perpendicular vector as the transform after all
 			quat.x = perp.x;
 			quat.y = perp.y;
 			quat.z = perp.z;
+
 			// In the quaternion values, w is cosine (theta / 2), where theta is rotation angle
 			quat.w = glm::dot(s_BegVec, s_EndVec);
 		}
 		else // if its zero
 		{
-			// The begin and end vectors coincide, so return an identity transform
+			// The begin and end vectors coincide, so use an identity transform
 			quat.x = quat.y = quat.z = quat.w = 0.0f;
 		}
 
-		s_ThisRot = glm::mat3_cast(quat);
-		s_LastRot = s_ThisRot * s_LastRot;
-		float scale = std::sqrt(
-                ((s_Model[0][0] * s_Model[0][0]) + (s_Model[0][1] * s_Model[0][1]) + (s_Model[0][2] * s_Model[0][2]) + 
-                 (s_Model[1][0] * s_Model[1][0]) + (s_Model[1][1] * s_Model[1][1]) + (s_Model[1][2] * s_Model[1][2]) +
-                 (s_Model[2][0] * s_Model[2][0]) + (s_Model[2][1] * s_Model[2][1]) + (s_Model[2][2] * s_Model[2][2])) / 3.0f);
-		s_Model[0][0] = s_ThisRot[0][0]; s_Model[1][0] = s_ThisRot[1][0]; s_Model[2][0] = s_ThisRot[2][0];
-        s_Model[0][1] = s_ThisRot[0][1]; s_Model[1][1] = s_ThisRot[1][1]; s_Model[2][1] = s_ThisRot[2][1];
-        s_Model[0][2] = s_ThisRot[0][2]; s_Model[1][2] = s_ThisRot[1][2]; s_Model[2][2] = s_ThisRot[2][2];
-		s_Model[0][0] *= scale; s_Model[1][0] *= scale; s_Model[2][0] *= scale;
-        s_Model[0][1] *= scale; s_Model[1][1] *= scale; s_Model[2][1] *= scale;
-        s_Model[0][2] *= scale; s_Model[1][2] *= scale; s_Model[2][2] *= scale;
-	}
-}
+		s_ThisRot = glm::mat3_cast(quat) * s_LastRot;
 
-void cursor_enter_callback(GLFWwindow *window, int entered)
-{
-    if(!entered)
-        s_isDragging = false;
+		/*float scale = std::sqrt(
+			(glm::length2(glm::row(s_Model, 0)) + 
+             glm::length2(glm::row(s_Model, 1)) +
+			 glm::length2(glm::row(s_Model, 2))) / 3.0f);
+		glm::vec3 translate = glm::row(s_Model, 3);*/
+
+		// only using model rotation anyway.
+		// Commented out code above and below would allow us to preserve any uniform scale and translation of the object.
+		// #TODO
+		s_Model = s_ThisRot;
+
+        //s_Model[0][0] *= scale; s_Model[1][0] *= scale; s_Model[2][0] *= scale;
+        //s_Model[0][1] *= scale; s_Model[1][1] *= scale; s_Model[2][1] *= scale;
+        //s_Model[0][2] *= scale; s_Model[1][2] *= scale; s_Model[2][2] *= scale;
+		//s_Model[0][3] = translate[0]; s_Model[1][3] = translate[1]; s_Model[2][3] = translate[2];
+	}
 }
 
 PLATFORM_WINDOW_REF CreatePlatformWindow(int width, int height, const char *title)
@@ -204,7 +204,6 @@ PLATFORM_WINDOW_REF CreatePlatformWindow(int width, int height, const char *titl
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetCursorPosCallback(window, cursor_position_callback);
-	glfwSetCursorEnterCallback(window, cursor_enter_callback);
 
 	// glad: load all OpenGL function pointers
     // ---------------------------------------
