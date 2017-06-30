@@ -3,6 +3,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 #include <iostream>
@@ -10,7 +12,13 @@
 namespace platform
 {
 
-static glm::mat4 s_Transform(1);
+static float s_Width;
+
+static float s_Height;
+
+static glm::mat4 s_Projection;
+
+static glm::mat4 s_Model(1);
 
 static glm::mat3 s_LastRot(1);
 
@@ -80,11 +88,21 @@ void InitPlatform()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // required on OS X
 }
 
+static void set_viewport_size(int width, int height)
+{
+	s_Width = static_cast<float>(width);
+	s_Height = static_cast<float>(height);
+
+	SetBounds(s_Width, s_Height);
+
+	s_Projection = glm::perspective(glm::radians(45.0f), static_cast<float>(s_Width) / static_cast<float>(s_Height), 0.1f, 100.f);
+}
+
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
 static void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
-	SetBounds(static_cast<float>(width), static_cast<float>(height));
+	set_viewport_size(width, height);
 
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
@@ -97,7 +115,7 @@ static void mouse_button_callback(GLFWwindow *window, int button, int action, in
 	{
 		if(button == GLFW_MOUSE_BUTTON_RIGHT)
 		{
-			s_Transform = glm::mat4(1);
+			s_Model = glm::mat4(1);
 
 			s_LastRot = glm::mat3(1);
 
@@ -119,8 +137,8 @@ static void mouse_button_callback(GLFWwindow *window, int button, int action, in
 
 static void cursor_position_callback(GLFWwindow *window, double xpos, double ypos)
 {
-	s_MousePt.x = xpos;
-	s_MousePt.y = ypos;
+	s_MousePt.x = static_cast<float>(xpos);
+	s_MousePt.y = static_cast<float>(ypos);
 
 	if(s_isDragging)
 	{
@@ -151,15 +169,15 @@ static void cursor_position_callback(GLFWwindow *window, double xpos, double ypo
 		s_ThisRot = glm::mat3_cast(quat);
 		s_LastRot = s_ThisRot * s_LastRot;
 		float scale = std::sqrt(
-                ((s_Transform[0][0] * s_Transform[0][0]) + (s_Transform[0][1] * s_Transform[0][1]) + (s_Transform[0][2] * s_Transform[0][2]) + 
-                 (s_Transform[1][0] * s_Transform[1][0]) + (s_Transform[1][1] * s_Transform[1][1]) + (s_Transform[1][2] * s_Transform[1][2]) +
-                 (s_Transform[2][0] * s_Transform[2][0]) + (s_Transform[2][1] * s_Transform[2][1]) + (s_Transform[2][2] * s_Transform[2][2])) / 3.0f);
-		s_Transform[0][0] = s_ThisRot[0][0]; s_Transform[1][0] = s_ThisRot[1][0]; s_Transform[2][0] = s_ThisRot[2][0];
-        s_Transform[0][1] = s_ThisRot[0][1]; s_Transform[1][1] = s_ThisRot[1][1]; s_Transform[2][1] = s_ThisRot[2][1];
-        s_Transform[0][2] = s_ThisRot[0][2]; s_Transform[1][2] = s_ThisRot[1][2]; s_Transform[2][2] = s_ThisRot[2][2];
-		s_Transform[0][0] *= scale; s_Transform[1][0] *= scale; s_Transform[2][0] *= scale;
-        s_Transform[0][1] *= scale; s_Transform[1][1] *= scale; s_Transform[2][1] *= scale;
-        s_Transform[0][2] *= scale; s_Transform[1][2] *= scale; s_Transform[2][2] *= scale;
+                ((s_Model[0][0] * s_Model[0][0]) + (s_Model[0][1] * s_Model[0][1]) + (s_Model[0][2] * s_Model[0][2]) + 
+                 (s_Model[1][0] * s_Model[1][0]) + (s_Model[1][1] * s_Model[1][1]) + (s_Model[1][2] * s_Model[1][2]) +
+                 (s_Model[2][0] * s_Model[2][0]) + (s_Model[2][1] * s_Model[2][1]) + (s_Model[2][2] * s_Model[2][2])) / 3.0f);
+		s_Model[0][0] = s_ThisRot[0][0]; s_Model[1][0] = s_ThisRot[1][0]; s_Model[2][0] = s_ThisRot[2][0];
+        s_Model[0][1] = s_ThisRot[0][1]; s_Model[1][1] = s_ThisRot[1][1]; s_Model[2][1] = s_ThisRot[2][1];
+        s_Model[0][2] = s_ThisRot[0][2]; s_Model[1][2] = s_ThisRot[1][2]; s_Model[2][2] = s_ThisRot[2][2];
+		s_Model[0][0] *= scale; s_Model[1][0] *= scale; s_Model[2][0] *= scale;
+        s_Model[0][1] *= scale; s_Model[1][1] *= scale; s_Model[2][1] *= scale;
+        s_Model[0][2] *= scale; s_Model[1][2] *= scale; s_Model[2][2] *= scale;
 	}
 }
 
@@ -171,7 +189,7 @@ void cursor_enter_callback(GLFWwindow *window, int entered)
 
 PLATFORM_WINDOW_REF CreatePlatformWindow(int width, int height, const char *title)
 {
-	SetBounds(static_cast<float>(width), static_cast<float>(height));
+	set_viewport_size(width, height);
 
 	// glfw window creation
     // --------------------
@@ -211,9 +229,10 @@ bool PollPlatformWindow(PLATFORM_WINDOW_REF window)
 	return !glfwWindowShouldClose((GLFWwindow *)window);
 }
 
-void GetPlatformWindowTrackball(glm::mat4 &trackball)
+void GetPlatformViewport(glm::mat4 &model, glm::mat4 &projection)
 {
-	trackball = s_Transform;
+	model = s_Model;
+	projection = s_Projection;
 }
 
 void PresentPlatformWindow(PLATFORM_WINDOW_REF window)

@@ -83,12 +83,7 @@ int main()
 		param->SetAsMat4(glm::value_ptr(view));
 	}
 
-	param = pipeline->GetParam("uProjection");
-	if(param)
-	{
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f), static_cast<float>(SCREEN_WIDTH) / static_cast<float>(SCREEN_HEIGHT), 0.1f, 100.f);
-		param->SetAsMat4(glm::value_ptr(projection));
-	}
+	render::PipelineParam *uProjectionParam = pipeline->GetParam("uProjection");
 
 	renderDevice->DestroyVertexShader(vertexShader);
 	renderDevice->DestroyPixelShader(pixelShader);
@@ -173,11 +168,12 @@ int main()
 	{
 		if(uModelParam)
 		{
-			glm::mat4 model;
+			glm::mat4 model, projection;
 
-			platform::GetPlatformWindowTrackball(model);
+			platform::GetPlatformViewport(model, projection);
 
 			uModelParam->SetAsMat4(glm::value_ptr(model));
+			uProjectionParam->SetAsMat4(glm::value_ptr(projection));
 		}
 
 		// render
