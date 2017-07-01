@@ -236,7 +236,12 @@ public:
     // Set an index buffer as active for subsequent draw commands
     virtual void SetIndexBuffer(IndexBuffer *indexBuffer) = 0;
 
-	// Create a 2D texture
+	// Create a 2D texture.
+	//
+	// data is assumed to consist of 32-bit pixel values where
+	// 8 bits are used for each of the red, green, and blue
+	// components, from lowest to highest byte order. The
+	// most significant byte is ignored.
     virtual Texture2D *CreateTexture2D(int width, int height, const void *data = nullptr) = 0;
 
     // Destroy a 2D texture
