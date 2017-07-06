@@ -44,7 +44,7 @@ int main()
 	platform::InitPlatform();
 
 	platform::PLATFORM_WINDOW_REF window =
-		platform::CreatePlatformWindow(800, 800, "Textured Cube");
+		platform::CreatePlatformWindow(800, 800, "Cube");
 	if(!window)
 	{
 		platform::TerminatePlatform();
