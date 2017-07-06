@@ -33,8 +33,6 @@ static float s_AdjustWidth;
 static float s_AdjustHeight;
 
 static glm::vec2 s_MousePt;
-static bool s_isClicked = false;
-static bool s_isRClicked = false;
 static bool s_isDragging = false;
 
 static void SetBounds(float width, float height)

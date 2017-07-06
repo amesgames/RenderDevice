@@ -155,7 +155,7 @@ public:
 
 PipelineParam *OpenGLPipeline::GetParam(const char *name)
 {
-	auto &iter = paramsByName.find(name);
+	auto const &iter = paramsByName.find(name);
 	if(iter == paramsByName.end())
 	{
 		int location = glGetUniformLocation(shaderProgram, name);
