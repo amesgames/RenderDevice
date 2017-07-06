@@ -177,6 +177,117 @@ struct VertexElement
 	long long offset; // offset where first occurrence of this vertex element resides in the buffer
 };
 
+// Encapsulates the rasterizer state
+class RasterState
+{
+public:
+
+	// virtual destructor to ensure subclasses have a virtual destructor
+	virtual ~RasterState() {}
+        
+protected:
+        
+	// protected default constructor to ensure these are never created
+	// directly
+	RasterState() {}
+};
+
+enum Winding
+{
+	WINDING_CW = 0,
+	WINDING_CCW,
+	WINDING_MAX
+};
+
+enum Face
+{
+	FACE_FRONT = 0,
+	FACE_BACK,
+	FACE_FRONT_AND_BACK,
+	FACE_MAX
+};
+
+enum RasterMode
+{
+	RASTERMODE_POINT = 0,
+	RASTERMODE_LINE,
+	RASTERMODE_FILL,
+	RASTERMODE_MAX
+};
+
+// Encapsulates the depth/stencil state
+class DepthStencilState
+{
+public:
+
+	// virtual destructor to ensure subclasses have a virtual destructor
+	virtual ~DepthStencilState() {}
+        
+protected:
+        
+	// protected default constructor to ensure these are never created
+	// directly
+	DepthStencilState() {}
+};
+
+enum Compare
+{
+	// Test comparison never passes
+	COMPARE_NEVER = 0,
+
+	// Test comparison passes if the incoming value is less than the stored value.
+	COMPARE_LESS,
+
+	// Test comparison passes if the incoming value is equal to the stored value.
+	COMPARE_EQUAL,
+
+	// Test comparison passes if the incoming value is less than or equal to the stored value.
+	COMPARE_LEQUAL,
+
+	// Test comparison passes if the incoming value is greater than the stored value.
+	COMPARE_GREATER,
+
+	// Test comparison passes if the incoming value is not equal to the stored value.
+	COMPARE_NOTEQUAL,
+
+	// Test comparison passes if the incoming value is greater than or equal to the stored value.
+	COMPARE_GEQUAL,
+
+	// Test comparison always passes.
+	COMPARE_ALWAYS,
+
+	COMPARE_MAX
+};
+
+enum StencilAction
+{
+	// Keeps the current value.
+	STENCIL_KEEP = 0,
+
+	// Sets the stencil buffer to zero.
+	STENCIL_ZERO,
+
+	// Sets the stencil buffer to the reference value masked with the write mask.
+	STENCIL_REPLACE,
+
+	// Increments the current stencil buffer value and clamps to maximum unsigned value.
+	STENCIL_INCR,
+
+	// Increments the current stencil buffer value and wraps the stencil buffer to zero when passing the maximum representable unsigned value.
+	STENCIL_INCR_WRAP,
+
+	// Decrements the current stencil buffer value and clamps to zero.
+	STENCIL_DECR,
+
+	// Decrements the current stencil buffer value and wraps the stencil buffer value to the maximum unsigned value.
+	STENCIL_DECR_WRAP,
+
+	// Bitwise invert of the current stencil buffer value.
+	STENCIL_INVERT,
+
+	STENCIL_MAX
+};
+
 // Encapsulates the render device API.
 class RenderDevice
 {
@@ -250,8 +361,41 @@ public:
     // Set a 2D texture as active on a slot for subsequent draw commands
     virtual void SetTexture2D(unsigned int slot, Texture2D *texture2D) = 0;
 
-    // Clear the default render target's color buffer to the specified RGBA values
-	virtual void Clear(float red, float green, float blue, float alpha, float depth) = 0;
+	// Create a raster state.
+	virtual RasterState *CreateRasterState(bool cullEnabled = true, Winding frontFace = WINDING_CCW, Face cullFace = FACE_BACK, RasterMode rasterMode = RASTERMODE_FILL) = 0;
+
+	// Destroy a raster state.
+	virtual void DestroyRasterState(RasterState *rasterState) = 0;
+
+	 // Set a raster state for subsequent draw commands
+	virtual void SetRasterState(RasterState *rasterState) = 0;
+
+	// Create a depth/stencil state.
+	virtual DepthStencilState *CreateDepthStencilState(bool depthEnabled = true,
+		bool depthWriteEnabled = true, float depthNear = 0, float depthFar = 1,
+		Compare depthCompare = COMPARE_LESS, bool frontFaceStencilEnabled = false,
+		Compare frontFaceStencilCompare = COMPARE_ALWAYS,
+		StencilAction frontFaceStencilFail = STENCIL_KEEP,
+		StencilAction frontFaceStencilPass = STENCIL_KEEP,
+		StencilAction frontFaceDepthFail = STENCIL_KEEP,
+		int frontFaceRef = 0, unsigned int frontFaceReadMask = 0xFFFFFFFF,
+		unsigned int frontFaceWriteMask = 0xFFFFFFFF,
+		bool backFaceStencilEnabled = false,
+		Compare backFaceStencilCompare = COMPARE_ALWAYS,
+		StencilAction backFaceStencilFail = STENCIL_KEEP,
+		StencilAction backFaceStencilPass = STENCIL_KEEP,
+		StencilAction backFaceDepthFail = STENCIL_KEEP,
+		int backFaceRef = 0, unsigned int backFaceReadMask = 0xFFFFFFFF,
+		unsigned int backFaceWriteMask = 0xFFFFFFFF) = 0;
+
+	// Destroy a depth/stencil state.
+	virtual void DestroyDepthStencilState(DepthStencilState *depthStencilState) = 0;
+
+	// Set a depth/stencil state for subsequent draw commands
+	virtual void SetDepthStencilState(DepthStencilState *depthStencilState) = 0;
+
+    // Clear the default render target's color buffer, depth buffer, and stencil buffer to the specified values
+	virtual void Clear(float red = 0.0f, float green = 0.0f, float blue = 0.0f, float alpha = 1.0f, float depth = 1.0f, int stencil = 0) = 0;
 
 	// Draw a collection of triangles using the currently active shader pipeline and vertex array data
 	virtual void DrawTriangles(int offset, int count) = 0;

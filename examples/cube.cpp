@@ -30,6 +30,12 @@ const char *pixelShaderSource = "#version 410 core\n"
 	"{\n"
 	"   FragColor = vec4(texture(uTextureSampler, FragTexCoord).rgb, 1);\n"
 	"}\n";
+const char *pixelShaderSource_YellowColor = "#version 410 core\n"
+	"out vec4 FragColor;\n"
+	"void main()\n"
+	"{\n"
+	"   FragColor = vec4(1, 0, 1, 1);\n"
+	"}\n";
 
 struct Vertex
 {
@@ -63,11 +69,15 @@ int main()
 	// vertex shader
 	render::VertexShader *vertexShader = renderDevice->CreateVertexShader(vertexShaderSource);
 
-	// fragment shader
+	// fragment shaders
 	render::PixelShader *pixelShader = renderDevice->CreatePixelShader(pixelShaderSource);
 
-	// link shaders
+	render::PixelShader *pixelShader_Yellow = renderDevice->CreatePixelShader(pixelShaderSource_YellowColor);
+
+	// link pipeline
 	render::Pipeline *pipeline = renderDevice->CreatePipeline(vertexShader, pixelShader);
+
+	render::Pipeline *pipeline_Yellow = renderDevice->CreatePipeline(vertexShader, pixelShader_Yellow);
 
 	// Set shader params
 	render::PipelineParam *param = pipeline->GetParam("uTextureSampler");
@@ -75,6 +85,7 @@ int main()
 		param->SetAsInt(0);
 
 	render::PipelineParam *uModelParam = pipeline->GetParam("uModel");
+	render::PipelineParam *uModelParam_Yellow = pipeline_Yellow->GetParam("uModel");
 
 	param = pipeline->GetParam("uView");
 	if(param)
@@ -83,10 +94,20 @@ int main()
 		param->SetAsMat4(glm::value_ptr(view));
 	}
 
+	param = pipeline_Yellow->GetParam("uView");
+	if(param)
+	{
+		glm::mat4 view = glm::translate(glm::mat4(1), glm::vec3(0, 0, -3));
+		param->SetAsMat4(glm::value_ptr(view));
+	}
+
 	render::PipelineParam *uProjectionParam = pipeline->GetParam("uProjection");
+
+	render::PipelineParam *uProjectionParam_Yellow = pipeline_Yellow->GetParam("uProjection");
 
 	renderDevice->DestroyVertexShader(vertexShader);
 	renderDevice->DestroyPixelShader(pixelShader);
+	renderDevice->DestroyPixelShader(pixelShader_Yellow);
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
