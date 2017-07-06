@@ -41,15 +41,10 @@ struct Vertex
 
 int main()
 {
-	const int SCREEN_WIDTH = 800;
-	const int SCREEN_HEIGHT = 800;
-
 	platform::InitPlatform();
 
-	// window creation
-	// --------------------
 	platform::PLATFORM_WINDOW_REF window =
-		platform::CreatePlatformWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Textured Cube");
+		platform::CreatePlatformWindow(800, 800, "Textured Cube");
 	if(!window)
 	{
 		platform::TerminatePlatform();
@@ -58,24 +53,21 @@ int main()
 
 	render::RenderDevice *renderDevice = render::CreateRenderDevice();
 
-	// build and compile our shader program
-	// ------------------------------------
-	// vertex shader
 	render::VertexShader *vertexShader = renderDevice->CreateVertexShader(vertexShaderSource);
 
-	// fragment shaders
 	render::PixelShader *pixelShader = renderDevice->CreatePixelShader(pixelShaderSource);
 
-	// link pipeline
 	render::Pipeline *pipeline = renderDevice->CreatePipeline(vertexShader, pixelShader);
 
-	// Set shader params
+	// For Sampler2D objects, we bind integers representing the texture slot number to use
 	render::PipelineParam *param = pipeline->GetParam("uTextureSampler");
 	if(param)
 		param->SetAsInt(0);
 
+	// Get shader parameter for model matrix; we will set it every frame
 	render::PipelineParam *uModelParam = pipeline->GetParam("uModel");
 
+	// Get shader parameter for view matrix and set it to a fixed camera position
 	param = pipeline->GetParam("uView");
 	if(param)
 	{
@@ -83,13 +75,13 @@ int main()
 		param->SetAsMat4(glm::value_ptr(view));
 	}
 
+	// Get shader parameter for projection matrix; we will set it every frame
 	render::PipelineParam *uProjectionParam = pipeline->GetParam("uProjection");
 
 	renderDevice->DestroyVertexShader(vertexShader);
 	renderDevice->DestroyPixelShader(pixelShader);
 	
-	// set up vertex data (and buffer(s)) and configure vertex attributes
-	// ------------------------------------------------------------------
+	// Our vertices now have 2D texture coordinates
 	Vertex vertices[] = {
 		// front
 		-0.5f, -0.5f,  0.5f, 0, 1,
@@ -128,6 +120,17 @@ int main()
 		 0.5f, -0.5f,  0.5f, 0, 0
 	};
 
+	render::VertexBuffer *vertexBuffer = renderDevice->CreateVertexBuffer(sizeof(vertices), vertices);
+
+	render::VertexElement vertexElements[] = {
+		{ 0, render::VERTEXELEMENTTYPE_FLOAT, 3, sizeof(Vertex), 0 },
+		{ 1, render::VERTEXELEMENTTYPE_FLOAT, 2, sizeof(Vertex), 12 }
+	};
+	render::VertexDescription *vertexDescription = renderDevice->CreateVertexDescription(COUNT_OF(vertexElements), vertexElements);
+
+	render::VertexArray *vertexArray = renderDevice->CreateVertexArray(1, &vertexBuffer, &vertexDescription);
+
+	// Setup indices and create index buffer
 	uint32_t indices[] = {
 		// front
 		0, 1, 2, 0, 2, 3,
@@ -148,22 +151,11 @@ int main()
 		20, 21, 22, 20, 22, 23
 	};
 
-	render::VertexBuffer *vertexBuffer = renderDevice->CreateVertexBuffer(sizeof(vertices), vertices);
-
-	render::VertexElement vertexElements[] = {
-		{ 0, render::VERTEXELEMENTTYPE_FLOAT, 3, sizeof(Vertex), 0 },
-		{ 1, render::VERTEXELEMENTTYPE_FLOAT, 2, sizeof(Vertex), 12 }
-	};
-	render::VertexDescription *vertexDescription = renderDevice->CreateVertexDescription(COUNT_OF(vertexElements), vertexElements);
-
-	render::VertexArray *vertexArray = renderDevice->CreateVertexArray(1, &vertexBuffer, &vertexDescription);
-
 	render::IndexBuffer *indexBuffer = renderDevice->CreateIndexBuffer(sizeof(indices), indices);
 
+	// create texture
 	render::Texture2D *texture2D = renderDevice->CreateTexture2D(BMPWIDTH, BMPHEIGHT, image32);
 
-	// render loop
-	// -----------
 	while(platform::PollPlatformWindow(window))
 	{
 		if(uModelParam)
@@ -176,22 +168,23 @@ int main()
 			uProjectionParam->SetAsMat4(glm::value_ptr(projection));
 		}
 
-		// render
-		// ------
-		renderDevice->Clear(0.2f, 0.3f, 0.3f, 1.0f, 1.0f);
+		renderDevice->Clear(0.2f, 0.3f, 0.3f);
 
-		// draw a cube
+		// Set the texture for slot 0
 		renderDevice->SetTexture2D(0, texture2D);
+
 		renderDevice->SetPipeline(pipeline);
 		renderDevice->SetVertexArray(vertexArray);
+
+		// Set the index buffer
 		renderDevice->SetIndexBuffer(indexBuffer);
+
+		// Draw assuming index buffer consists of 32-bit, unsigned integers
 		renderDevice->DrawTrianglesIndexed32(0, COUNT_OF(indices));
 
 		platform::PresentPlatformWindow(window);
 	}
 
-	// optional: de-allocate all resources once they've outlived their purpose:
-	// ------------------------------------------------------------------------
 	renderDevice->DestroyTexture2D(texture2D);
 	renderDevice->DestroyIndexBuffer(indexBuffer);
 	renderDevice->DestroyVertexArray(vertexArray);
