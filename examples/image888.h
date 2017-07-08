@@ -5,4 +5,4 @@
 #define BMPWIDTH           512
 #define BMPHEIGHT          512
 
-extern "C" const unsigned long image32[];
+extern "C" const unsigned int image32[];
