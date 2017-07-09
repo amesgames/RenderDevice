@@ -27,7 +27,7 @@ See http://amesgames.net/2017/06/27/c-rendering-engine-i-abstracting-the-render-
 
 * Samples
     * Triangle: renders a static, solid-colored triangle in normalized device coordinates
-    * Cube: renders a textured cube and supports the ability to rotate the cube with the left mouse button
+    * Cube: renders a textured cube and supports the ability to rotate the cube with the left mouse button and zoom in and out with the mouse scroll wheel
 
 ## Roadmap
 
