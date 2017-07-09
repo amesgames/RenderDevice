@@ -16,16 +16,11 @@ namespace platform
 {
 
 static float s_Width;
-
 static float s_Height;
+static glm::mat4 s_Projection(glm::uninitialize);
 
-static glm::mat4 s_Projection;
-
-static glm::mat4 s_Model(1);
-
-static glm::mat3 s_LastRot(1);
-
-static glm::mat3 s_ThisRot(1);
+static glm::mat3 s_LastModel(1);
+static glm::mat3 s_Model(1);
 
 static glm::vec3 s_BegVec(0);
 static glm::vec3 s_EndVec(0);
@@ -34,6 +29,8 @@ static float s_AdjustHeight;
 
 static glm::vec2 s_MousePt;
 static bool s_isDragging = false;
+
+static glm::mat4 s_View = glm::translate(glm::mat4(1), glm::vec3(0, 0, -3));
 
 static void SetBounds(float width, float height)
 {
@@ -116,16 +113,14 @@ static void mouse_button_callback(GLFWwindow *window, int button, int action, in
 	{
 		if(button == GLFW_MOUSE_BUTTON_RIGHT)
 		{
-			s_Model = glm::mat4(1);
+			s_LastModel = glm::mat3(1);
 
-			s_LastRot = glm::mat3(1);
-
-			s_ThisRot = glm::mat3(1);
+			s_Model = glm::mat3(1);
 		}
 		else if(button == GLFW_MOUSE_BUTTON_LEFT)
 		{
 			s_isDragging = true;
-			s_LastRot = s_ThisRot;
+			s_LastModel = s_Model;
 			MapToSphere(s_MousePt, s_BegVec);
 		}
 	}
@@ -165,24 +160,13 @@ static void cursor_position_callback(GLFWwindow *window, double xpos, double ypo
 			quat.x = quat.y = quat.z = quat.w = 0.0f;
 		}
 
-		s_ThisRot = glm::mat3_cast(quat) * s_LastRot;
-
-		/*float scale = std::sqrt(
-			(glm::length2(glm::row(s_Model, 0)) + 
-             glm::length2(glm::row(s_Model, 1)) +
-			 glm::length2(glm::row(s_Model, 2))) / 3.0f);
-		glm::vec3 translate = glm::row(s_Model, 3);*/
-
-		// only using model rotation anyway.
-		// Commented out code above and below would allow us to preserve any uniform scale and translation of the object.
-		// #TODO
-		s_Model = s_ThisRot;
-
-        //s_Model[0][0] *= scale; s_Model[1][0] *= scale; s_Model[2][0] *= scale;
-        //s_Model[0][1] *= scale; s_Model[1][1] *= scale; s_Model[2][1] *= scale;
-        //s_Model[0][2] *= scale; s_Model[1][2] *= scale; s_Model[2][2] *= scale;
-		//s_Model[0][3] = translate[0]; s_Model[1][3] = translate[1]; s_Model[2][3] = translate[2];
+		s_Model = glm::mat3_cast(quat) * s_LastModel;
 	}
+}
+
+static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
+	s_View[3][2] += yoffset;
 }
 
 PLATFORM_WINDOW_REF CreatePlatformWindow(int width, int height, const char *title)
@@ -202,6 +186,7 @@ PLATFORM_WINDOW_REF CreatePlatformWindow(int width, int height, const char *titl
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetCursorPosCallback(window, cursor_position_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 
 	// glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -226,9 +211,10 @@ bool PollPlatformWindow(PLATFORM_WINDOW_REF window)
 	return !glfwWindowShouldClose((GLFWwindow *)window);
 }
 
-void GetPlatformViewport(glm::mat4 &model, glm::mat4 &projection)
+void GetPlatformViewport(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection)
 {
 	model = s_Model;
+	view = s_View;
 	projection = s_Projection;
 }
 

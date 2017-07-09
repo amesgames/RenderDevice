@@ -67,13 +67,8 @@ int main()
 	// Get shader parameter for model matrix; we will set it every frame
 	render::PipelineParam *uModelParam = pipeline->GetParam("uModel");
 
-	// Get shader parameter for view matrix and set it to a fixed camera position
-	param = pipeline->GetParam("uView");
-	if(param)
-	{
-		glm::mat4 view = glm::translate(glm::mat4(1), glm::vec3(0, 0, -3));
-		param->SetAsMat4(glm::value_ptr(view));
-	}
+	// Get shader parameter for view matrix; we will set it every frame
+	render::PipelineParam *uViewParam = pipeline->GetParam("uView");
 
 	// Get shader parameter for projection matrix; we will set it every frame
 	render::PipelineParam *uProjectionParam = pipeline->GetParam("uProjection");
@@ -160,11 +155,12 @@ int main()
 	{
 		if(uModelParam)
 		{
-			glm::mat4 model, projection;
+			glm::mat4 model(glm::uninitialize), view(glm::uninitialize), projection(glm::uninitialize);
 
-			platform::GetPlatformViewport(model, projection);
+			platform::GetPlatformViewport(model, view, projection);
 
 			uModelParam->SetAsMat4(glm::value_ptr(model));
+			uViewParam->SetAsMat4(glm::value_ptr(view));
 			uProjectionParam->SetAsMat4(glm::value_ptr(projection));
 		}
 

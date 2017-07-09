@@ -15,7 +15,7 @@ PLATFORM_WINDOW_REF CreatePlatformWindow(int width, int height, const char *titl
 
 bool PollPlatformWindow(PLATFORM_WINDOW_REF window);
 
-void GetPlatformViewport(glm::mat4 &modelview, glm::mat4 &projection);
+void GetPlatformViewport(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection);
 
 void PresentPlatformWindow(PLATFORM_WINDOW_REF window);
 
