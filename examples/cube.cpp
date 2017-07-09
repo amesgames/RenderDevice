@@ -59,19 +59,23 @@ int main()
 
 	render::Pipeline *pipeline = renderDevice->CreatePipeline(vertexShader, pixelShader);
 
-	// For Sampler2D objects, we bind integers representing the texture slot number to use
+	// For Sampler2D objects, we bind integers representing the texture
+	// slot number to use
 	render::PipelineParam *param = pipeline->GetParam("uTextureSampler");
 	if(param)
 		param->SetAsInt(0);
 
 	// Get shader parameter for model matrix; we will set it every frame
-	render::PipelineParam *uModelParam = pipeline->GetParam("uModel");
+	render::PipelineParam *uModelParam =
+		pipeline->GetParam("uModel");
 
 	// Get shader parameter for view matrix; we will set it every frame
-	render::PipelineParam *uViewParam = pipeline->GetParam("uView");
+	render::PipelineParam *uViewParam =
+		pipeline->GetParam("uView");
 
 	// Get shader parameter for projection matrix; we will set it every frame
-	render::PipelineParam *uProjectionParam = pipeline->GetParam("uProjection");
+	render::PipelineParam *uProjectionParam =
+		pipeline->GetParam("uProjection");
 
 	renderDevice->DestroyVertexShader(vertexShader);
 	renderDevice->DestroyPixelShader(pixelShader);
@@ -153,16 +157,12 @@ int main()
 
 	while(platform::PollPlatformWindow(window))
 	{
-		if(uModelParam)
-		{
-			glm::mat4 model(glm::uninitialize), view(glm::uninitialize), projection(glm::uninitialize);
+		glm::mat4 model(glm::uninitialize), view(glm::uninitialize), projection(glm::uninitialize);
+		platform::GetPlatformViewport(model, view, projection);
 
-			platform::GetPlatformViewport(model, view, projection);
-
-			uModelParam->SetAsMat4(glm::value_ptr(model));
-			uViewParam->SetAsMat4(glm::value_ptr(view));
-			uProjectionParam->SetAsMat4(glm::value_ptr(projection));
-		}
+		uModelParam->SetAsMat4(glm::value_ptr(model));
+		uViewParam->SetAsMat4(glm::value_ptr(view));
+		uProjectionParam->SetAsMat4(glm::value_ptr(projection));
 
 		renderDevice->Clear(0.2f, 0.3f, 0.3f);
 
