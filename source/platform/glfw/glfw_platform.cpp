@@ -166,7 +166,7 @@ static void cursor_position_callback(GLFWwindow *window, double xpos, double ypo
 
 static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-	s_View[3][2] += yoffset;
+	s_View[3][2] += static_cast<float>(yoffset);
 }
 
 PLATFORM_WINDOW_REF CreatePlatformWindow(int width, int height, const char *title)
