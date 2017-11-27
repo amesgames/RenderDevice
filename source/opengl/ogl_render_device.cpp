@@ -82,7 +82,11 @@ public:
 		shaderProgram = glCreateProgram();
 		glAttachShader(shaderProgram, vertexShader->vertexShader);
 		glAttachShader(shaderProgram, pixelShader->fragmentShader);
+		
 		glLinkProgram(shaderProgram);
+
+		glDetachShader(shaderProgram, vertexShader->vertexShader);
+		glDetachShader(shaderProgram, pixelShader->fragmentShader);
 
 		// check for linking errors
 		int success;
@@ -239,8 +243,8 @@ public:
 
 		for(unsigned int i = 0; i < numVertexBuffers; i++)
 		{
-			OpenGLVertexBuffer *vertexBuffer = reinterpret_cast<OpenGLVertexBuffer *>(vertexBuffers[i]);
-			OpenGLVertexDescription *vertexDescription = reinterpret_cast<OpenGLVertexDescription *>(vertexDescriptions[i]);
+			OpenGLVertexBuffer *vertexBuffer = dynamic_cast<OpenGLVertexBuffer *>(vertexBuffers[i]);
+			OpenGLVertexDescription *vertexDescription = dynamic_cast<OpenGLVertexDescription *>(vertexDescriptions[i]);
 
 			glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer->VBO);
 
@@ -438,7 +442,7 @@ void OpenGLRenderDevice::DestroyPixelShader(PixelShader *pixelShader)
 
 Pipeline *OpenGLRenderDevice::CreatePipeline(VertexShader *vertexShader, PixelShader *pixelShader)
 {
-	return new OpenGLPipeline(reinterpret_cast<OpenGLVertexShader *>(vertexShader), reinterpret_cast<OpenGLPixelShader *>(pixelShader));
+	return new OpenGLPipeline(dynamic_cast<OpenGLVertexShader *>(vertexShader), dynamic_cast<OpenGLPixelShader *>(pixelShader));
 }
 
 void OpenGLRenderDevice::DestroyPipeline(Pipeline *pipeline)
@@ -448,7 +452,7 @@ void OpenGLRenderDevice::DestroyPipeline(Pipeline *pipeline)
 
 void OpenGLRenderDevice::SetPipeline(Pipeline *pipeline)
 {
-	glUseProgram(reinterpret_cast<OpenGLPipeline *>(pipeline)->shaderProgram);
+	glUseProgram(dynamic_cast<OpenGLPipeline *>(pipeline)->shaderProgram);
 }
 
 VertexBuffer *OpenGLRenderDevice::CreateVertexBuffer(long long size, const void *data)
@@ -483,7 +487,7 @@ void OpenGLRenderDevice::DestroyVertexArray(VertexArray *vertexArray)
 
 void OpenGLRenderDevice::SetVertexArray(VertexArray *vertexArray)
 {
-	glBindVertexArray(reinterpret_cast<OpenGLVertexArray *>(vertexArray)->VAO);
+	glBindVertexArray(dynamic_cast<OpenGLVertexArray *>(vertexArray)->VAO);
 }
 
 IndexBuffer *OpenGLRenderDevice::CreateIndexBuffer(long long size, const void *data)
@@ -498,7 +502,7 @@ void OpenGLRenderDevice::DestroyIndexBuffer(IndexBuffer *indexBuffer)
     
 void OpenGLRenderDevice::SetIndexBuffer(IndexBuffer *indexBuffer)
 {
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, reinterpret_cast<OpenGLIndexBuffer *>(indexBuffer)->IBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, dynamic_cast<OpenGLIndexBuffer *>(indexBuffer)->IBO);
 }
 
 Texture2D *OpenGLRenderDevice::CreateTexture2D(int width, int height, const void *data)
@@ -514,7 +518,7 @@ void OpenGLRenderDevice::DestroyTexture2D(Texture2D *texture2D)
 void OpenGLRenderDevice::SetTexture2D(unsigned int slot, Texture2D *texture2D)
 {
 	glActiveTexture(GL_TEXTURE0 + slot);
-	glBindTexture(GL_TEXTURE_2D, texture2D ? reinterpret_cast<OpenGLTexture2D *>(texture2D)->texture : 0);
+	glBindTexture(GL_TEXTURE_2D, texture2D ? dynamic_cast<OpenGLTexture2D *>(texture2D)->texture : 0);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -573,7 +577,7 @@ void OpenGLRenderDevice::SetDepthStencilState(DepthStencilState *depthStencilSta
 {
 	DepthStencilState *oldDepthStencilState = m_DepthStencilState;
 
-	if (depthStencilState)
+	if(depthStencilState)
 		m_DepthStencilState = dynamic_cast<OpenGLDepthStencilState *>(depthStencilState);
 	else
 		m_DepthStencilState = m_DefaultDepthStencilState;
